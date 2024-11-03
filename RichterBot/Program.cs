@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
+using NLog;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Polling;
@@ -11,6 +12,7 @@ namespace RichterBot
 {
     internal class Program
     {
+        private static Logger logger = LogManager.GetCurrentClassLogger();
         private static string jokeApiUrl = "https://geek-jokes.sameerkumar.website/api?format=json";
         private static readonly HttpClient _httpClient = new();
         private static ITelegramBotClient _botClient;
@@ -44,7 +46,7 @@ namespace RichterBot
             _ = Task.Run(() => _botClient.StartReceiving(UpdateHandler, ErrorHandler, _receiverOptions, cts.Token));
 
             var me = await _botClient.GetMeAsync();
-            Console.WriteLine($"{me.FirstName} запущен!");
+            logger.Info($"{me.FirstName} запущен!");
 
             //Console.WriteLine("Press Enter to exit...");
             //Console.ReadLine();
@@ -60,10 +62,11 @@ namespace RichterBot
                 {
                     case UpdateType.Message:
                     {
-                        Console.WriteLine("Пришло сообщение!");
                         var message = update.Message;
                         var text = message!.Text;
                         var chat = message.Chat;
+                        logger.Trace($"Пришло сообщение от ${update.Message?.From} : {text}");
+
                         if (text != null && text.Contains("Рихтер", StringComparison.InvariantCultureIgnoreCase) && _pidorSet.Any(keyword => text.IndexOf(keyword, StringComparison.OrdinalIgnoreCase) >= 0))
                         {
                             await botClient.SendTextMessageAsync(
@@ -111,7 +114,7 @@ namespace RichterBot
                         {
                             var callbackQuery = update.CallbackQuery;
                             var user = callbackQuery.From;
-                            Console.WriteLine($"{user.FirstName} ({user.Id}) нажал на кнопку: {callbackQuery.Data}");
+                            logger.Trace($"{user.FirstName} ({user.Id}) нажал на кнопку: {callbackQuery.Data}");
                             var chat = callbackQuery.Message.Chat;
 
                             switch (callbackQuery.Data)
@@ -144,7 +147,7 @@ namespace RichterBot
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                logger.Error(ex, "Ошибка при оброаботке Update");
             }
         }
 
@@ -177,9 +180,9 @@ namespace RichterBot
                 var json = JObject.Parse(responseBody);
                 joke = json["joke"].ToString();
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                Console.WriteLine($"Request error: {e.Message}");
+                logger.Error(ex, "Ошибка при обработке запроса");
             }
             return joke;
         }
