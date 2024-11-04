@@ -22,6 +22,7 @@ namespace RichterBot
 
                 using var doc = JsonDocument.Parse(responseBody);
                 joke = doc.RootElement.GetProperty("joke").GetString();
+                joke = joke?.Replace("Chuck Norris", "Jeffrey Richter");
             }
             catch (Exception ex)
             {

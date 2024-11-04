@@ -10,7 +10,6 @@ namespace RichterBot
 {
     public class BotService
     {
-        //private static ITelegramBotClient _botClient;
         private const string _bibleButton = "bible";
         private const string _jokeButton = "joke";
         private static readonly InlineKeyboardMarkup _inlineKeyboard = new(new List<InlineKeyboardButton[]>
@@ -134,7 +133,7 @@ namespace RichterBot
 
                 case _bibleButton:
                 {
-                    var quote = Book.GetRandomQuote();
+                    var quote = BookService.GetRandomQuote();
                     await botClient.AnswerCallbackQueryAsync(callbackQuery.Id);
                     await botClient.SendTextMessageAsync(chat.Id, quote);
                     return;
